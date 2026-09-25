@@ -1,6 +1,6 @@
 # /brag-bn
 
-A Claude Code skill that makes a short launch or ad video for your project **with a Bangla voiceover**. It's a thin layer over [/brag](https://github.com/latent-spaces/brag) and runs /brag's full Hyperframes workflow. It changes four things:
+An [Agent Skill](https://agentskills.io) that makes a short launch or ad video for your project **with a Bangla voiceover**. It's a thin layer over [/brag](https://github.com/latent-spaces/brag) and runs /brag's full Hyperframes workflow. It changes four things:
 
 - **Voice:** Microsoft Edge neural TTS (`edge-tts`) with Bangladeshi voices, instead of English Kokoro
 - **Script:** colloquial Bangla (চলিত ভাষা), numbers written as words, local brands in Bangla script (বিকাশ, নগদ)
@@ -9,31 +9,60 @@ A Claude Code skill that makes a short launch or ad video for your project **wit
 
 ## Install
 
+brag-bn works in any agent that reads Agent Skills (Claude Code, Codex CLI, opencode, Gemini CLI, Cursor, Copilot and more), and needs [/brag](https://github.com/latent-spaces/brag) next to it. One command each, through the [`skills`](https://github.com/vercel-labs/skills) CLI:
+
 ```bash
-git clone https://github.com/GrandpaEJ/brag-bn ~/.claude/skills/brag-bn
+npx skills add https://github.com/latent-spaces/brag --skill brag -g
+npx skills add https://github.com/GrandpaEJ/brag-bn -g
 ```
 
-Requirements:
+`-g` installs for every project; drop it to install into the current one only. Add `-a codex` (or `opencode`, `claude-code`, …) to pick the agent instead of being asked.
 
-- The /brag plugin: `/plugin marketplace add latent-spaces/brag` then `/plugin install brag@brag`
+<details>
+<summary>No installer? Clone it where your agent looks.</summary>
+
+| Agent | brag-bn goes in (project) | or (all projects) |
+|---|---|---|
+| Claude Code | `.claude/skills/brag-bn/` | `~/.claude/skills/brag-bn/` |
+| Codex CLI | `.agents/skills/brag-bn/` | `~/.codex/skills/brag-bn/` |
+| opencode | `.agents/skills/brag-bn/` | `~/.config/opencode/skills/brag-bn/` |
+| Gemini CLI | `.agents/skills/brag-bn/` | `~/.gemini/skills/brag-bn/` |
+| Antigravity | `.agents/skills/brag-bn/` | `~/.gemini/antigravity/skills/brag-bn/` |
+| Anything else | Point its custom instructions at `SKILL.md` in a clone of this repo | |
+
+```bash
+git clone https://github.com/GrandpaEJ/brag-bn ~/.claude/skills/brag-bn   # for example
+```
+
+Put /brag's `skills/brag/` folder beside it the same way. In Claude Code the plugin works too: `/plugin marketplace add latent-spaces/brag`, then `/plugin install brag@brag`.
+</details>
+
+brag-bn finds /brag on its own: `scripts/find-brag.sh` checks the Claude Code plugin, the `npx skills` folders, and the project's `.agents/`, `.opencode/` and `.claude/` folders. If yours is somewhere else, set `BRAG_SKILL_DIR` to the folder that holds brag's `SKILL.md`.
+
+Also needed:
+
 - Node.js 22+, FFmpeg, and [uv](https://docs.astral.sh/uv/)
-- Hyperframes, set up on first run: `npx hyperframes doctor`, `npx hyperframes browser ensure`, `npx hyperframes skills update`
+- Hyperframes, set up on first run: `npx hyperframes doctor`, `npx hyperframes browser ensure`, `npx hyperframes skills`
+- A POSIX shell (on Windows, WSL or Git Bash)
 
 `edge-tts` needs no install: the helper script runs through `uv run --with edge-tts`.
 
 ## Use
 
-Inside your project, ask Claude Code:
+Inside your project, ask your agent:
 
 ```text
 /brag-bn --format vertical --tone polished --text mixed
 ```
+
+In an agent without slash commands, just say it: "make a brag-bn video, vertical, polished".
 
 | Option | Values | Default |
 |---|---|---|
 | `--voice-id` | `bn-BD-PradeepNeural`, `bn-BD-NabanitaNeural`, `bn-IN-BashkarNeural`, `bn-IN-TanishaaNeural` | `bn-BD-PradeepNeural` |
 | `--text` | `bn`, `en`, `mixed` | `mixed` |
 | `--rate` | e.g. `+5%`, `-5%` | `+0%` |
+| `--polish` | flag: a light voice chain on every clip (see below) | off |
 
 All /brag options (`--tone`, `--format`, `--duration`, `--no-music`, `--no-sfx`, `--title`) work too. If a `brag-output/` from an English run already exists, ask for "the Bangla version": the skill reuses that storyboard and changes only the voice, the copy, the fonts and the timings.
 

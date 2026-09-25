@@ -1,13 +1,28 @@
 ---
 name: brag-bn
 description: Bangla version of /brag — a short launch or ad video for the current project with a Bangla voiceover (Microsoft Edge TTS, Bangladeshi voices) and optional Bangla on-screen text. Use when someone says "/brag-bn", asks for a brag, promo, ad or launch video "in Bangla", "Bangla voice", "bangla te video", or wants edge-tts narration on a /brag video.
+compatibility: Any agent that can read files and run shell commands (Claude Code, Codex CLI, opencode, Gemini CLI, Cursor, Copilot and others). Needs the /brag skill installed, Node.js 22+, FFmpeg, uv, and network access for edge-tts.
 ---
 
 # /brag-bn
 
-The /brag workflow with a Bangla voice. It is a thin layer over the installed `brag:brag` skill. Load that skill and follow its steps 1–4, with the overrides below. Where the two disagree, this file wins. Everything it does not mention (creative laws, tones, audio, Hyperframes handoff, check gate, poster, share copy) stays exactly as /brag says.
+The /brag workflow with a Bangla voice. It is a thin layer over the /brag skill: follow /brag's steps 1–4, with the overrides below. Where the two disagree, this file wins. Everything it does not mention (creative laws, tones, audio, Hyperframes handoff, check gate, poster, share copy) stays exactly as /brag says.
 
-Do not edit the /brag plugin itself. It lives in the plugin cache, and `claude plugin update` overwrites it.
+`<skill-dir>` below is the folder that holds this `SKILL.md`. Some agents print it when the skill loads. Otherwise use the path you read this file from.
+
+## Setup: find /brag first
+
+This works in any agent that can read files and run shell commands. Before step 1, locate the /brag skill:
+
+```bash
+bash <skill-dir>/scripts/find-brag.sh
+```
+
+It prints the /brag folder, wherever an agent installed it: a Claude Code plugin, `npx skills`, or a project's `.agents/`, `.opencode/` or `.claude/` skills folder. Then read `<printed dir>/SKILL.md` and follow it; its own `references/`, `assets/` and `scripts/` are relative to that folder, so its `<skill-dir>` is the printed dir, not this one. In Claude Code with the plugin installed, loading the `brag:brag` skill does the same thing.
+
+If the script exits 1, /brag isn't installed. Show the user the install command it prints and ask before running it. Don't write a /brag workflow from memory.
+
+Never edit /brag's own files. Plugin updates and `npx skills update` overwrite them, so put every Bangla change here instead.
 
 ## Options
 
@@ -27,7 +42,7 @@ Bangla voices: `bn-BD-PradeepNeural` (male), `bn-BD-NabanitaNeural` (female), `b
 ## Overrides to /brag
 
 ### Dispatch
-Narration is always on, so this is the full /brag workflow with `voice.enabled = true`. Never switch to brag-slim; it has no voice.
+Narration is always on, so this is the full /brag workflow with `voice.enabled = true`. Skip /brag's model check and never switch to brag-slim; it has no voice.
 
 **Bangla version of an existing cut:** when a finished `brag-output*/` already exists for this project and the user wants it in Bangla, don't redo steps 1–2 from scratch. Copy its `composition/` (without `assets/vo` and `snapshots`) into the new timestamped output dir, keep the storyboard, and change only the voice, the Bangla copy, the fonts and the timings. Write a short `brag-plan.md` that lists the differences.
 
@@ -79,5 +94,6 @@ Hyperframes needs every named font shipped locally with `@font-face`. Download t
 
 ## Environment (first run on a machine)
 - `npx hyperframes doctor`. If Chrome is missing, run `npx hyperframes browser ensure`.
-- `npx hyperframes skills update` installs the Hyperframes domain skills that /brag step 3 reads.
+- `npx hyperframes skills` installs the Hyperframes domain skills that /brag step 3 reads, for every supported AI tool (`npx hyperframes skills update` refreshes them). If your agent still doesn't list them, read them straight from `~/.agents/skills/hyperframes-*/SKILL.md`.
+- Every command here is POSIX shell. On Windows, run the agent inside WSL or Git Bash.
 - `uv` must be on PATH, because the helper script runs through `uv run --with edge-tts`. Kokoro is only needed for the English fallback: `uv venv ~/.cache/hyperframes/kokoro-venv && uv pip install --python ~/.cache/hyperframes/kokoro-venv/bin/python kokoro-onnx soundfile`, then `HYPERFRAMES_PYTHON=~/.cache/hyperframes/kokoro-venv/bin/python`.
