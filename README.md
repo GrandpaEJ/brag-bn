@@ -45,6 +45,8 @@ uv run --with edge-tts python scripts/bn_tts.py lines.json --out-dir out --voice
 
 `lines.json` is `[{"id": "vo1", "text": "..."}]`. You get one 48 kHz WAV per line and `voiceover.json`, which holds each clip's duration and word timings.
 
+Add `--polish` to run every clip through a light voice chain: a rumble cut, less mud, more presence, a de-esser, gentle compression and a very small room. It adds no delay, so the word timings stay valid. For long narration such as tutorials, `--voice bn-BD-NabanitaNeural --rate -3% --polish` is the cleanest read. Nabanita has noticeably less sibilance than Pradeep.
+
 ## A note on edge-tts
 
 `edge-tts` uses Microsoft Edge's read-aloud service. It's free and needs no key, but it isn't an official API, so it can change or rate-limit. For a paid campaign where reliability matters, Azure Speech offers the same neural voices through an official API.

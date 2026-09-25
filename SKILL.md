@@ -18,6 +18,7 @@ Everything /brag accepts (`--tone`, `--format`, `--duration`, `--no-music`, `--n
 | `--voice-id` | any edge-tts Bangla voice | `bn-BD-PradeepNeural` (BD male) |
 | `--text` | `bn` (Bangla on screen), `en` (English on screen), `mixed` | `mixed` |
 | `--rate` | edge-tts rate, e.g. `+8%`, `-5%` | `+0%` |
+| `--polish` | flag: EQ, de-esser, compression and a small room on every clip (passed to `bn_tts.py`) | off |
 
 Bangla voices: `bn-BD-PradeepNeural` (male), `bn-BD-NabanitaNeural` (female), `bn-IN-BashkarNeural` and `bn-IN-TanishaaNeural` (Kolkata accent; only use them when the user asks).
 

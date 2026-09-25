@@ -6,7 +6,12 @@ one clip per storyboard line, plus word timings for caption sync.
 Usage (run through uv so edge-tts is provisioned on the fly):
 
     uv run --with edge-tts python bn_tts.py lines.json --out-dir <dir> \
-        [--voice bn-BD-PradeepNeural] [--rate +0%] [--pitch +0Hz]
+        [--voice bn-BD-PradeepNeural] [--rate +0%] [--pitch +0Hz] [--polish]
+
+--polish runs each clip through a light voice chain (rumble cut, less mud,
+more presence, a de-esser, gentle compression and a very small room) so the
+raw read-aloud voice sounds less thin. For narration, "--rate -4% --pitch -4Hz
+--polish" is a calmer, warmer read than the defaults.
 
 lines.json is a list of {"id": "vo1", "text": "..."} objects, in order.
 
@@ -32,6 +37,17 @@ except ImportError:
     sys.exit("edge-tts is not installed. Run this through: uv run --with edge-tts python bn_tts.py ...")
 
 TICKS_PER_SECOND = 10_000_000  # edge-tts reports offsets in 100 ns units
+
+# Adds no delay before the speech, so the word timings stay valid.
+POLISH = ",".join([
+    "highpass=f=75",
+    "equalizer=f=250:t=q:w=1.2:g=-2.5",
+    "equalizer=f=3200:t=q:w=1.4:g=2.5",
+    "highshelf=f=9000:g=2",
+    "deesser=i=0.35",
+    "acompressor=threshold=-20dB:ratio=2.5:attack=8:release=120:makeup=2",
+    "aecho=0.8:0.5:18|31:0.07|0.04",
+])
 
 
 async def synth(text, voice, rate, pitch, mp3_path):
@@ -66,6 +82,7 @@ def main():
     ap.add_argument("--voice", default="bn-BD-PradeepNeural")
     ap.add_argument("--rate", default="+0%")
     ap.add_argument("--pitch", default="+0Hz")
+    ap.add_argument("--polish", action="store_true", help="EQ, de-ess, compress and a small room on every clip")
     args = ap.parse_args()
 
     lines = json.loads(Path(args.lines).read_text(encoding="utf-8"))
@@ -84,7 +101,8 @@ def main():
         if not mp3.exists() or mp3.stat().st_size == 0:
             sys.exit(f"edge-tts returned no audio for {lid}")
         # The composition mixes 48 kHz; convert once here so every clip matches.
-        subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(mp3), "-ar", "48000", "-ac", "1", str(wav)], check=True)
+        af = ["-af", POLISH] if args.polish else []
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(mp3), *af, "-ar", "48000", "-ac", "1", str(wav)], check=True)
         mp3.unlink()
         dur = probe_duration(wav)
         manifest.append({"id": lid, "text": text, "file": wav.name, "duration": dur, "words": words})
